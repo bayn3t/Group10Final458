@@ -32,6 +32,7 @@ let markerGroup = L.markerClusterGroup({
     maxClusterRadius: 60,
     disableClusteringAtZoom: 16
 });
+let routePolyline = null; // Store the current route polyline
 
 // Color scheme for markers based on number of routes
 function getMarkerColor(routeCount) {
@@ -40,6 +41,139 @@ function getMarkerColor(routeCount) {
     if (count <= 2) return '#667eea';      // Purple - small
     if (count <= 5) return '#2196F3';      // Blue - medium
     return '#00BCD4';                      // Teal - large
+}
+
+// Calculate distance between two coordinates (Haversine formula)
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+}
+
+// Order stops linearly from one end to the other
+function orderStopsByProximity(stops) {
+    if (stops.length === 0) return [];
+    if (stops.length === 1) return stops;
+    if (stops.length === 2) return stops;
+    
+    // Build a proximity graph - connect each stop to its nearest neighbor
+    const proximityGraph = {};
+    
+    for (let i = 0; i < stops.length; i++) {
+        const neighbors = [];
+        
+        for (let j = 0; j < stops.length; j++) {
+            if (i !== j) {
+                const dist = getDistance(
+                    stops[i].properties.stop_lat,
+                    stops[i].properties.stop_lon,
+                    stops[j].properties.stop_lat,
+                    stops[j].properties.stop_lon
+                );
+                neighbors.push({ index: j, distance: dist });
+            }
+        }
+        
+        // Sort by distance and keep closest neighbors
+        neighbors.sort((a, b) => a.distance - b.distance);
+        proximityGraph[i] = neighbors.map(n => n.index);
+    }
+    
+    // Find endpoints (stops that are furthest apart)
+    let maxDistance = 0;
+    let endpoint1 = 0;
+    let endpoint2 = 0;
+    
+    for (let i = 0; i < stops.length; i++) {
+        for (let j = i + 1; j < stops.length; j++) {
+            const dist = getDistance(
+                stops[i].properties.stop_lat,
+                stops[i].properties.stop_lon,
+                stops[j].properties.stop_lat,
+                stops[j].properties.stop_lon
+            );
+            if (dist > maxDistance) {
+                maxDistance = dist;
+                endpoint1 = i;
+                endpoint2 = j;
+            }
+        }
+    }
+    
+    // Build the path from endpoint1 to endpoint2 using greedy nearest neighbor
+    const visited = new Set();
+    const path = [endpoint1];
+    visited.add(endpoint1);
+    let current = endpoint1;
+    
+    while (visited.size < stops.length) {
+        let nextStop = -1;
+        let minDistance = Infinity;
+        
+        for (let i = 0; i < stops.length; i++) {
+            if (!visited.has(i)) {
+                const dist = getDistance(
+                    stops[current].properties.stop_lat,
+                    stops[current].properties.stop_lon,
+                    stops[i].properties.stop_lat,
+                    stops[i].properties.stop_lon
+                );
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nextStop = i;
+                }
+            }
+        }
+        
+        if (nextStop !== -1) {
+            path.push(nextStop);
+            visited.add(nextStop);
+            current = nextStop;
+        }
+    }
+    
+    return path.map(index => stops[index]);
+}
+
+// Draw a polyline connecting all stops for a specific route
+function drawRoutePolyline(routeNumber) {
+    // Remove existing polyline if any
+    if (routePolyline) {
+        map.removeLayer(routePolyline);
+    }
+    
+    // Find all stops serving this route
+    let stopsOnRoute = allStops.filter(stop => {
+        const routesServing = (stop.properties.routes_serving || '').split(/\s+/).map(r => r.trim()).filter(r => r);
+        return routesServing.includes(routeNumber);
+    });
+    
+    if (stopsOnRoute.length === 0) return;
+    
+    // Order stops by proximity (nearest neighbor)
+    stopsOnRoute = orderStopsByProximity(stopsOnRoute);
+    
+    // Create coordinates array for the polyline
+    const coordinates = stopsOnRoute.map(stop => [
+        stop.properties.stop_lat,
+        stop.properties.stop_lon
+    ]);
+    
+    // Create and add polyline to map
+    routePolyline = L.polyline(coordinates, {
+        color: '#FF6B35',
+        weight: 3,
+        opacity: 0.7,
+        smoothFactor: 1
+    }).addTo(map);
+    
+    // Bring markers to front
+    markerGroup.bringToFront();
 }
 
 // Create custom marker icon
@@ -204,10 +338,15 @@ document.getElementById('mode-location').addEventListener('click', function() {
 
 // Search functionality
 document.getElementById('search-input').addEventListener('input', function(e) {
-    const query = e.target.value.toLowerCase().trim();
+    const query = e.target.value.trim().toUpperCase(); // Convert to uppercase for route search
     
     if (query.length === 0) {
         displayStops(allStops);
+        // Remove route polyline when search is cleared
+        if (routePolyline) {
+            map.removeLayer(routePolyline);
+            routePolyline = null;
+        }
         return;
     }
     
@@ -222,11 +361,22 @@ document.getElementById('search-input').addEventListener('input', function(e) {
         } else {
             // Search only by location name (partial match)
             const stopName = (props.stop_name || '').toLowerCase();
-            return stopName.includes(query);
+            return stopName.includes(query.toLowerCase());
         }
     });
     
     displayStops(filteredStops);
+    
+    // Draw route polyline if searching by route
+    if (searchMode === 'route' && query.length > 0 && filteredStops.length > 0) {
+        drawRoutePolyline(query);
+    } else {
+        // Remove polyline if searching by location
+        if (routePolyline) {
+            map.removeLayer(routePolyline);
+            routePolyline = null;
+        }
+    }
     
     // Show message if no results
     if (filteredStops.length === 0) {
@@ -238,6 +388,11 @@ document.getElementById('search-input').addEventListener('input', function(e) {
 document.getElementById('clear-search').addEventListener('click', function() {
     document.getElementById('search-input').value = '';
     displayStops(allStops);
+    // Remove route polyline when clearing search
+    if (routePolyline) {
+        map.removeLayer(routePolyline);
+        routePolyline = null;
+    }
 });
 
 // Load data when page loads
@@ -248,5 +403,10 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         document.getElementById('search-input').value = '';
         displayStops(allStops);
+        // Remove route polyline when pressing Escape
+        if (routePolyline) {
+            map.removeLayer(routePolyline);
+            routePolyline = null;
+        }
     }
 });
