@@ -28,9 +28,39 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 // Store data globally
 let allStops = [];
 let filteredStops = [];
+
+// Custom cluster icon with size variation instead of numbers
+const clusterIconCreateFunction = function(cluster) {
+    const childCount = cluster.getChildCount();
+    let size = 20;
+    let color = '#667eea';
+    
+    if (childCount < 10) {
+        size = 20;
+        color = '#667eea';      // Purple - small
+    } else if (childCount < 50) {
+        size = 28;
+        color = '#2196F3';      // Blue - medium
+    } else if (childCount < 100) {
+        size = 36;
+        color = '#00BCD4';      // Teal - large
+    } else {
+        size = 44;
+        color = '#FF6B35';      // Orange - very large
+    }
+    
+    return L.divIcon({
+        html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></div>`,
+        className: 'cluster-icon',
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2]
+    });
+};
+
 let markerGroup = L.markerClusterGroup({
     maxClusterRadius: 60,
-    disableClusteringAtZoom: 16
+    disableClusteringAtZoom: 16,
+    iconCreateFunction: clusterIconCreateFunction
 });
 let routePolyline = null; // Store the current route polyline
 
