@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive map of all active Seattle/King County Metro bus stops with route and accessibility information.">
+    <title>Seattle Metro Bus Stops Map</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.0/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.0/dist/MarkerCluster.Default.css" />
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Map container -->
+    <div id="map"></div>
+    
+    <!-- Header -->
+    <div class="header">
+        <h1>🚌 Metro Stops</h1>
+        <p>Browse all active Seattle & King County bus stops with route information and transit details.</p>
+        <div class="stop-count">6,422 Active Stops</div>
+    </div>
+    
+    <!-- Search Box -->
+    <div class="search-box">
+        <div class="search-controls">
+            <input 
+                type="text" 
+                id="search-input"
+                placeholder="Search..."
+                autocomplete="off"
+            >
+            <div class="search-toggle">
+                <button id="mode-route" class="toggle-btn active" data-mode="route">Route</button>
+                <button id="mode-location" class="toggle-btn" data-mode="location">Location</button>
+            </div>
+        </div>
+        <button id="clear-search" style="padding: 8px 12px; margin-top: 5px; background: #e0e0e0; color: #333; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Clear</button>
+    </div>
+    
+    <!-- Legend -->
+    <div class="legend">
+        <h3>Stop Types</h3>
+        <div class="legend-item">
+            <div class="legend-circle small"></div>
+            <span>1-2 Routes</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-circle medium"></div>
+            <span>3-5 Routes</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-circle large"></div>
+            <span>6+ Routes</span>
+        </div>
+    </div>
+    
+    <!-- Loading indicator -->
+    <div class="loading" id="loading">
+        <span class="spinner"></span>Loading stops...
+    </div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Leaflet MarkerCluster JS -->
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.0/dist/leaflet.markercluster.js"></script>
+    
+    <!-- Main App JS -->
+    <script src="js/main.js"></script>
+</body>
+</html>

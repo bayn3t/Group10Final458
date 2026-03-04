@@ -1,0 +1,813 @@
+<!DOCTYPE html><!DOCTYPE html>
+
+<html lang="en"><html lang="en">
+
+<head><head>
+
+    <meta charset="UTF-8">    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Isochrone Map - Queen Anne, Seattle</title>    <title>Isochrone Map - Queen Anne, Seattle</title>
+
+        
+
+    <!-- Leaflet CSS -->    <!-- Leaflet CSS -->
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+        
+
+    <style>    <style>
+
+        * {        * {
+
+            margin: 0;            margin: 0;
+
+            padding: 0;            padding: 0;
+
+            box-sizing: border-box;            box-sizing: border-box;
+
+        }        }
+
+                
+
+        body {        body {
+
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+            background: #f5f5f5;            background: #f5f5f5;
+
+        }        }
+
+                
+
+        #map {        #map {
+
+            width: 100vw;            width: 100vw;
+
+            height: 100vh;            height: 100vh;
+
+            z-index: 1;            z-index: 1;
+
+        }        }
+
+                
+
+        .info-panel {        .info-panel {
+
+            position: absolute;            position: absolute;
+
+            top: 20px;            top: 20px;
+
+            right: 20px;            right: 20px;
+
+            background: white;            background: white;
+
+            padding: 20px;            padding: 20px;
+
+            border-radius: 8px;            border-radius: 8px;
+
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+
+            z-index: 1000;            z-index: 1000;
+
+            max-width: 300px;            max-width: 300px;
+
+            max-height: 90vh;            max-height: 90vh;
+
+            overflow-y: auto;            overflow-y: auto;
+
+        }        }
+
+                
+
+        .info-panel h2 {        .info-panel h2 {
+
+            font-size: 18px;            font-size: 18px;
+
+            margin-bottom: 15px;            margin-bottom: 15px;
+
+            color: #333;            color: #333;
+
+        }        }
+
+                
+
+        .control-group {        .control-group {
+
+            margin-bottom: 15px;            margin-bottom: 15px;
+
+        }        }
+
+                
+
+        .control-group label {        .control-group label {
+
+            display: block;            display: block;
+
+            font-size: 14px;            font-size: 14px;
+
+            font-weight: 500;            font-weight: 500;
+
+            margin-bottom: 5px;            margin-bottom: 5px;
+
+            color: #555;            color: #555;
+
+        }        }
+
+                
+
+        .control-group input,        .control-group input,
+
+        .control-group select {        .control-group select {
+
+            width: 100%;            width: 100%;
+
+            padding: 8px;            padding: 8px;
+
+            border: 1px solid #ddd;            border: 1px solid #ddd;
+
+            border-radius: 4px;            border-radius: 4px;
+
+            font-size: 14px;            font-size: 14px;
+
+            font-family: inherit;            font-family: inherit;
+
+        }        }
+
+                
+
+        .control-group input:focus,        .control-group input:focus,
+
+        .control-group select:focus {        .control-group select:focus {
+
+            outline: none;            outline: none;
+
+            border-color: #4CAF50;            border-color: #4CAF50;
+
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);            box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+
+        }        }
+
+                
+
+        .button-group {        .button-group {
+
+            display: flex;            display: flex;
+
+            gap: 10px;            gap: 10px;
+
+            margin-top: 15px;            margin-top: 15px;
+
+        }        }
+
+                
+
+        button {        button {
+
+            flex: 1;            flex: 1;
+
+            padding: 10px;            padding: 10px;
+
+            background: #4CAF50;            background: #4CAF50;
+
+            color: white;            color: white;
+
+            border: none;            border: none;
+
+            border-radius: 4px;            border-radius: 4px;
+
+            cursor: pointer;            cursor: pointer;
+
+            font-size: 14px;            font-size: 14px;
+
+            font-weight: 500;            font-weight: 500;
+
+            transition: background 0.3s;            transition: background 0.3s;
+
+        }        }
+
+                
+
+        button:hover {        button:hover {
+
+            background: #45a049;            background: #45a049;
+
+        }        }
+
+                
+
+        button:disabled {        button:disabled {
+
+            background: #ccc;            background: #ccc;
+
+            cursor: not-allowed;            cursor: not-allowed;
+
+        }        }
+
+                
+
+        .clear-btn {        .clear-btn {
+
+            background: #f44336;            background: #f44336;
+
+        }        }
+
+                
+
+        .clear-btn:hover {        .clear-btn:hover {
+
+            background: #da190b;            background: #da190b;
+
+        }        }
+
+                
+
+        .loading {        .loading {
+
+            display: none;            display: none;
+
+            text-align: center;            text-align: center;
+
+            margin-top: 10px;            margin-top: 10px;
+
+            color: #666;            color: #666;
+
+            font-size: 13px;            font-size: 13px;
+
+        }        }
+
+                
+
+        .loading.active {        .loading.active {
+
+            display: block;            display: block;
+
+        }        }
+
+                
+
+        .spinner {        .spinner {
+
+            display: inline-block;            display: inline-block;
+
+            width: 12px;            width: 12px;
+
+            height: 12px;            height: 12px;
+
+            border: 2px solid #f3f3f3;            border: 2px solid #f3f3f3;
+
+            border-top: 2px solid #4CAF50;            border-top: 2px solid #4CAF50;
+
+            border-radius: 50%;            border-radius: 50%;
+
+            animation: spin 1s linear infinite;            animation: spin 1s linear infinite;
+
+            margin-right: 8px;            margin-right: 8px;
+
+        }        }
+
+                
+
+        @keyframes spin {        @keyframes spin {
+
+            0% { transform: rotate(0deg); }            0% { transform: rotate(0deg); }
+
+            100% { transform: rotate(360deg); }            100% { transform: rotate(360deg); }
+
+        }        }
+
+                
+
+        .info-text {        .info-text {
+
+            font-size: 13px;            font-size: 13px;
+
+            color: #666;            color: #666;
+
+            margin-top: 10px;            margin-top: 10px;
+
+            line-height: 1.5;            line-height: 1.5;
+
+        }        }
+
+                
+
+        .legend {        .legend {
+
+            background: white;            background: white;
+
+            padding: 15px;            padding: 15px;
+
+            border-radius: 8px;            border-radius: 8px;
+
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+
+            z-index: 1000;            z-index: 1000;
+
+            font-size: 13px;            font-size: 13px;
+
+        }        }
+
+                
+
+        .legend-item {        .legend-item {
+
+            margin-bottom: 8px;            margin-bottom: 8px;
+
+            display: flex;            display: flex;
+
+            align-items: center;            align-items: center;
+
+            gap: 8px;            gap: 8px;
+
+        }        }
+
+                
+
+        .legend-color {        .legend-color {
+
+            width: 20px;            width: 20px;
+
+            height: 20px;            height: 20px;
+
+            border-radius: 3px;            border-radius: 3px;
+
+            opacity: 0.7;            opacity: 0.7;
+
+        }        }
+
+    </style>    </style>
+
+</head></head>
+
+<body><body>
+
+    <div id="map"></div>    <div id="map"></div>
+
+        
+
+    <div class="info-panel">    <div class="info-panel">
+
+        <h2>Isochrone Map</h2>        <h2>Isochrone Map</h2>
+
+                
+
+        <div class="control-group">        <div class="control-group">
+
+            <label for="timeSelect">Travel Time (minutes)</label>            <label for="timeSelect">Travel Time (minutes)</label>
+
+            <select id="timeSelect">            <select id="timeSelect">
+
+                <option value="5">5 minutes</option>                <option value="5">5 minutes</option>
+
+                <option value="10" selected>10 minutes</option>                <option value="10" selected>10 minutes</option>
+
+                <option value="15">15 minutes</option>                <option value="15">15 minutes</option>
+
+                <option value="20">20 minutes</option>                <option value="20">20 minutes</option>
+
+                <option value="30">30 minutes</option>                <option value="30">30 minutes</option>
+
+                <option value="45">45 minutes</option>                <option value="45">45 minutes</option>
+
+                <option value="60">60 minutes</option>                <option value="60">60 minutes</option>
+
+            </select>            </select>
+
+        </div>        </div>
+
+                
+
+        <div class="control-group">        <div class="control-group">
+
+            <label for="modeSelect">Travel Mode</label>            <label for="modeSelect">Travel Mode</label>
+
+            <select id="modeSelect">            <select id="modeSelect">
+
+                <option value="driving-car">Driving</option>                <option value="driving-car">Driving</option>
+
+                <option value="foot-walking">Walking</option>                <option value="foot-walking">Walking</option>
+
+                <option value="cycling-regular">Cycling</option>                <option value="cycling-regular">Cycling</option>
+
+            </select>            </select>
+
+        </div>        </div>
+
+        
+
+        <div class="control-group">        <div class="button-group">
+
+            <label for="mapboxToken">Mapbox API Token</label>            <button id="generateBtn" onclick="generateIsochrone()">Generate Isochrone</button>
+
+            <input type="password" id="mapboxToken" placeholder="pk.eyJ...">            <button id="clearBtn" class="clear-btn" onclick="clearIsochrone()">Clear</button>
+
+            <small style="color: #999; margin-top: 5px; display: block;">Get free token at mapbox.com</small>        </div>
+
+        </div>        
+
+                <div class="loading" id="loading">
+
+        <div class="button-group">            <span class="spinner"></span>Loading...
+
+            <button id="generateBtn" onclick="generateIsochrone()">Generate Isochrone</button>        </div>
+
+            <button id="clearBtn" class="clear-btn" onclick="clearIsochrone()">Clear</button>        
+
+        </div>        <div class="info-text" id="infoText">
+
+                    <strong>Instructions:</strong><br>
+
+        <div class="loading" id="loading">            1. Get a FREE Mapbox token at <a href="https://account.mapbox.com/auth/signup/" target="_blank">mapbox.com</a><br>
+
+            <span class="spinner"></span>Loading...            2. Paste your token in the input below<br>
+
+        </div>            3. Select travel time and mode<br>
+
+                    4. Click on the map to select a location<br>
+
+        <div class="info-text" id="infoText">            5. Click "Generate Isochrone"
+
+            <strong>Instructions:</strong><br>        </div>
+
+            1. Get a free Mapbox token<br>        
+
+            2. Paste token above<br>        <div class="control-group" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+
+            3. Select travel time and mode<br>            <label for="mapboxToken">Mapbox API Token</label>
+
+            4. Click on map to select location<br>            <input type="password" id="mapboxToken" placeholder="pk.eyJ..." style="font-size: 11px;">
+
+            5. Click "Generate Isochrone"            <small style="color: #999; margin-top: 5px; display: block;">Free tier: 600 isochrones/month</small>
+
+        </div>        </div>
+
+                
+
+        <div id="coordInfo" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #666; display: none;">        <div id="coordInfo" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #666; display: none;">
+
+            <strong>Selected Location:</strong><br>            <strong>Selected Location:</strong><br>
+
+            <span id="coordText"></span>            <span id="coordText"></span>
+
+        </div>        </div>
+
+    </div>    </div>
+
+
+
+    <!-- Leaflet JS -->    <!-- Leaflet JS -->
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+        
+
+    <script>    <script>
+
+        // Initialize map centered on Queen Anne, Seattle        // Initialize map centered on Queen Anne, Seattle
+
+        const map = L.map('map').setView([47.6347, -122.3596], 14);        const map = L.map('map').setView([47.6347, -122.3596], 14);
+
+                
+
+        // Add tile layer        // Add tile layer
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+            attribution: '© OpenStreetMap contributors',            attribution: '© OpenStreetMap contributors',
+
+            maxZoom: 19            maxZoom: 19
+
+        }).addTo(map);        }).addTo(map);
+
+                
+
+        // Color scheme for isochrones        // Color scheme for isochrones
+
+        const colors = [        const colors = [
+
+            '#ff4444',  // 5 min            '#ff4444',  // 5 min
+
+            '#ff8844',  // 10 min            '#ff8844',  // 10 min
+
+            '#ffbb33',  // 15 min            '#ffbb33',  // 15 min
+
+            '#ffee44',  // 20 min            '#ffee44',  // 20 min
+
+            '#88ff44',  // 30 min            '#88ff44',  // 30 min
+
+            '#44ff88',  // 45 min            '#44ff88',  // 45 min
+
+            '#44ffff'   // 60 min            '#44ffff'   // 60 min
+
+        ];        ];
+
+                
+
+        const timeValues = [5, 10, 15, 20, 30, 45, 60];        const timeValues = [5, 10, 15, 20, 30, 45, 60];
+
+                
+
+        let selectedPoint = null;        let selectedPoint = null;
+
+        let isochroneLayer = null;        let isochroneLayer = null;
+
+        let centerMarker = null;        let centerMarker = null;
+
+                
+
+        // Handle map click        // Handle map click
+
+        map.on('click', function(e) {        map.on('click', function(e) {
+
+            selectedPoint = e.latlng;            selectedPoint = e.latlng;
+
+            updateCenterMarker();            updateCenterMarker();
+
+            displayCoordinates();            displayCoordinates();
+
+        });        });
+
+                
+
+        function updateCenterMarker() {        function updateCenterMarker() {
+
+            if (centerMarker) {            if (centerMarker) {
+
+                map.removeLayer(centerMarker);                map.removeLayer(centerMarker);
+
+            }            }
+
+            if (selectedPoint) {            if (selectedPoint) {
+
+                centerMarker = L.circleMarker(selectedPoint, {                centerMarker = L.circleMarker(selectedPoint, {
+
+                    radius: 8,                    radius: 8,
+
+                    fillColor: '#2196F3',                    fillColor: '#2196F3',
+
+                    color: '#fff',                    color: '#fff',
+
+                    weight: 2,                    weight: 2,
+
+                    opacity: 1,                    opacity: 1,
+
+                    fillOpacity: 0.8                    fillOpacity: 0.8
+
+                }).addTo(map);                }).addTo(map);
+
+            }            }
+
+        }        }
+
+                
+
+        function displayCoordinates() {        function displayCoordinates() {
+
+            if (selectedPoint) {            if (selectedPoint) {
+
+                const coordInfo = document.getElementById('coordInfo');                const coordInfo = document.getElementById('coordInfo');
+
+                const coordText = document.getElementById('coordText');                const coordText = document.getElementById('coordText');
+
+                coordText.innerHTML = `Latitude: ${selectedPoint.lat.toFixed(4)}<br>Longitude: ${selectedPoint.lng.toFixed(4)}`;                coordText.innerHTML = `Latitude: ${selectedPoint.lat.toFixed(4)}<br>Longitude: ${selectedPoint.lng.toFixed(4)}`;
+
+                coordInfo.style.display = 'block';                coordInfo.style.display = 'block';
+
+            }            }
+
+        }        }
+
+                
+
+        async function generateIsochrone() {        async function generateIsochrone() {
+
+            if (!selectedPoint) {            if (!selectedPoint) {
+
+                alert('Please click on the map to select a location first');                alert('Please click on the map to select a location first');
+
+                return;                return;
+
+            }            }
+
+            
+
+            const token = document.getElementById('mapboxToken').value;            const token = document.getElementById('mapboxToken').value;
+
+            if (!token) {            if (!token) {
+
+                alert('Please enter your Mapbox API token');                alert('Please enter your Mapbox API token first.\n\nGet a free token at: https://account.mapbox.com/auth/signup/');
+
+                return;                return;
+
+            }            }
+
+                        
+
+            const time = document.getElementById('timeSelect').value;            const time = document.getElementById('timeSelect').value;
+
+            const mode = document.getElementById('modeSelect').value;            const mode = document.getElementById('modeSelect').value;
+
+                        
+
+            const loadingEl = document.getElementById('loading');            const loadingEl = document.getElementById('loading');
+
+            const generateBtn = document.getElementById('generateBtn');            const generateBtn = document.getElementById('generateBtn');
+
+                        
+
+            loadingEl.classList.add('active');            loadingEl.classList.add('active');
+
+            generateBtn.disabled = true;            generateBtn.disabled = true;
+
+                        
+
+            try {            try {
+
+                const modeMap = {                // Map our modes to Mapbox modes
+
+                    'driving-car': 'driving',                const modeMap = {
+
+                    'foot-walking': 'walking',                    'driving-car': 'driving',
+
+                    'cycling-regular': 'cycling'                    'foot-walking': 'walking',
+
+                };                    'cycling-regular': 'cycling'
+
+                                };
+
+                const mapboxMode = modeMap[mode];                
+
+                const url = `https://api.mapbox.com/isochrone/v1/mapbox/${mapboxMode}/${selectedPoint.lng},${selectedPoint.lat}?contours_minutes=${time}&polygons=true&access_token=${token}`;                const mapboxMode = modeMap[mode];
+
+                                
+
+                const response = await fetch(url);                // Mapbox Isochrone API
+
+                                const url = `https://api.mapbox.com/isochrone/v1/mapbox/${mapboxMode}/${selectedPoint.lng},${selectedPoint.lat}?contours_minutes=${time}&polygons=true&access_token=${token}`;
+
+                if (!response.ok) {                
+
+                    throw new Error(`API error: ${response.status}`);                const response = await fetch(url);
+
+                }                
+
+                                if (!response.ok) {
+
+                const data = await response.json();                    if (response.status === 401) {
+
+                                        throw new Error('Invalid Mapbox token. Check your token and try again.');
+
+                if (!data.features || data.features.length === 0) {                    } else if (response.status === 429) {
+
+                    throw new Error('No isochrone data received');                        throw new Error('Rate limit exceeded. You\'ve reached your free tier limit (600/month).');
+
+                }                    }
+
+                                    throw new Error(`API error: ${response.status}`);
+
+                if (isochroneLayer) {                }
+
+                    map.removeLayer(isochroneLayer);                
+
+                }                const data = await response.json();
+
+                                
+
+                isochroneLayer = L.geoJSON(data, {                if (!data.features || data.features.length === 0) {
+
+                    style: {                    throw new Error('No isochrone data received');
+
+                        fillColor: getColorForTime(time),                }
+
+                        weight: 2,                
+
+                        opacity: 1,                // Remove previous isochrone
+
+                        color: 'white',                if (isochroneLayer) {
+
+                        dashArray: '3',                    map.removeLayer(isochroneLayer);
+
+                        fillOpacity: 0.6                }
+
+                    }                
+
+                }).addTo(map);                // Add new isochrone
+
+                                isochroneLayer = L.geoJSON(data, {
+
+                map.fitBounds(isochroneLayer.getBounds(), { padding: [50, 50] });                    style: {
+
+                                        fillColor: getColorForTime(time),
+
+            } catch (error) {                        weight: 2,
+
+                console.error('Error:', error);                        opacity: 1,
+
+                alert('Error: ' + error.message);                        color: 'white',
+
+            } finally {                        dashArray: '3',
+
+                loadingEl.classList.remove('active');                        fillOpacity: 0.6
+
+                generateBtn.disabled = false;                    }
+
+            }                }).addTo(map);
+
+        }                
+
+                        // Fit map to isochrone bounds
+
+        function getColorForTime(time) {                map.fitBounds(isochroneLayer.getBounds(), { padding: [50, 50] });
+
+            const index = timeValues.indexOf(parseInt(time));                
+
+            return index !== -1 ? colors[index] : '#4CAF50';                // Show helpful info
+
+        }                document.getElementById('infoText').innerHTML = `
+
+                            <strong>✓ Isochrone Generated!</strong><br>
+
+        function clearIsochrone() {                    <small>Showing areas reachable via ${mapboxMode} in ${time} minutes from your selected point.</small>
+
+            if (isochroneLayer) {                `;
+
+                map.removeLayer(isochroneLayer);                
+
+                isochroneLayer = null;            } catch (error) {
+
+            }                console.error('Error:', error);
+
+            if (centerMarker) {                alert('Error generating isochrone: ' + error.message);
+
+                map.removeLayer(centerMarker);            } finally {
+
+                centerMarker = null;                loadingEl.classList.remove('active');
+
+            }                generateBtn.disabled = false;
+
+            selectedPoint = null;            }
+
+            document.getElementById('coordInfo').style.display = 'none';        }
+
+        }        
+
+                function getColorForTime(time) {
+
+        // Add legend            const index = timeValues.indexOf(parseInt(time));
+
+        const legend = L.control({position: 'bottomleft'});            return index !== -1 ? colors[index] : '#4CAF50';
+
+        legend.onAdd = function(map) {        }
+
+            const div = L.DomUtil.create('div', 'legend');        
+
+            div.innerHTML = `        function clearIsochrone() {
+
+                <strong style="display: block; margin-bottom: 10px;">Travel Times</strong>            if (isochroneLayer) {
+
+                ${colors.map((color, i) => `                map.removeLayer(isochroneLayer);
+
+                    <div class="legend-item">                isochroneLayer = null;
+
+                        <div class="legend-color" style="background-color: ${color};"></div>            }
+
+                        <span>${timeValues[i]} min</span>            if (centerMarker) {
+
+                    </div>                map.removeLayer(centerMarker);
+
+                `).join('')}                centerMarker = null;
+
+            `;            }
+
+            return div;            selectedPoint = null;
+
+        };            document.getElementById('coordInfo').style.display = 'none';
+
+        legend.addTo(map);        }
+
+    </script>        
+
+</body>        // Add legend
+
+</html>        const legend = L.control({position: 'bottomleft'});
+
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'legend');
+            div.innerHTML = `
+                <strong style="display: block; margin-bottom: 10px;">Travel Times</strong>
+                ${colors.map((color, i) => `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: ${color};"></div>
+                        <span>${timeValues[i]} min</span>
+                    </div>
+                `).join('')}
+            `;
+            return div;
+        };
+        legend.addTo(map);
+    </script>
+</body>
+</html>
