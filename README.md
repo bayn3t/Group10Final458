@@ -1,4 +1,4 @@
-# Seattle Metro Bus Stops Map 🚌
+# Seattle Metro Bus Stops Map
 
 An interactive web map of all Seattle/King County Metro bus stops. Find nearby stops, see which routes they serve, and learn about accessibility.
 
@@ -11,15 +11,15 @@ An interactive web map of all Seattle/King County Metro bus stops. Find nearby s
 
 ## What You Can Do
 
-🗺️ **Zoom in and out** - See bus stops at different scales  
-🔍 **Search by route or stop name** - Find exactly what you're looking for  
-📍 **Click any stop** - Get info about which routes stop there  
-♿ **Check accessibility** - See ADA information for each stop  
-📱 **Works on any device** - Works on your phone, tablet, or computer
+ **Zoom in and out** - See bus stops at different scales  
+ **Search by route or stop name** - Find exactly what you're looking for  
+ **Click any stop** - Get info about which routes stop there  
+ **Check accessibility** - See ADA information for each stop  
+ **Works on any device** - Works on your phone, tablet, or computer
 
 ## Files
 
-- **index.html** - The main page (start here!)
+- **index.html** - The main page
 - **css/style.css** - All the styling and colors
 - **js/main.js** - The code that makes the map work
 - **data/stops.geojson** - Bus stop data for the entire region
@@ -40,13 +40,4 @@ Over 6,400 active bus stops across Seattle and King County. Info includes:
 - ADA accessibility
 - Service area
 
-## Want to Use This Somewhere Else?
-
-1. Push this to your GitHub repo
-2. Go to Settings > Pages
-3. Set it to deploy from main branch
-4. Your map will be live at `https://yourusername.github.io/repo-name`
-
----
-
-Made for exploring Seattle's amazing bus system 🚌
+Made for exploring Seattle's amazing bus system
